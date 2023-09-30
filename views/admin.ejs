@@ -23,6 +23,12 @@
             </div>
         </div>
 
+        <div class="loader-container" x-show="connect_attempt > 0">
+            <div>
+                <span class="loader"></span>
+                <span class="loader-text">Connecting</span>
+            </div>
+        </div>
 
         <div class="m-auto" x-show="!isUserAuth" x-data="loginFunction">
             <h3 class="h2 font-bold">Hi,</h3>
@@ -160,7 +166,7 @@
 
                 this.ws.onclose = (e) => {
                     if (this.isUserAuth) {
-                        this.errors = "Socket is closed. Reconnect will be attempted in 1 second."
+                        this.errors = `Socket is closed. Reconnect will be attempted in 1 second.(attempt : ${this.connect_attempt})`
                         this.status = ""
                         console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
                         
