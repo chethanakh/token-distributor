@@ -1,0 +1,14 @@
+{
+    "a": {
+        "teamName": "Sanmark A",
+        "password": "1234"
+    },
+    "b": {
+        "teamName": "Sanmark B",
+        "password": "1234"
+    },
+    "c": {
+        "teamName": "Sanmark C",
+        "password": "1234"
+    }
+}
