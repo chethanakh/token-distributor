@@ -126,7 +126,9 @@ function processAdminSocketCommand(payload, ws) {
         case "GET_LOGED_TEAM":
             sendLogedTeams(ws);
             break;
-
+        case "BACK_TO_WAITING_SCREEN_REQUEST":
+            sendBAckToWaitingScreenResponse();
+            break;
         default:
             break;
     }
@@ -155,6 +157,19 @@ function sendLogedTeams(ws) {
         AvailableTeamListArr.push(userArr[value].teamName);
     })
     ws.send(new WsResponse('AVAILABLE_TEAMS_LIST', { teams: AvailableTeamListArr }, 200).toJsonString());
+}
+
+function sendBAckToWaitingScreenResponse() {
+    var teamVsToken = {};
+    teamArr = shuffle(Object.keys(connectionList));
+    teamArr = removeAdmin(teamArr);
+    var i = 1;
+    teamArr.forEach(function (value, key) {
+        teamVsToken[value] = i;
+        connectionList[value].send(new WsResponse('BACK_TO_WAITING_SCREEN', { number: i }, 200).toJsonString());
+        i++;
+    })
+    sendToAdmin(new WsResponse('BACK_TO_WAITING_SCREEN_REQUEST_SENT', { team_vs_token: teamVsToken }, 200).toJsonString());
 }
 
 function removeAdmin(array) {

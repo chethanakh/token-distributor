@@ -130,11 +130,17 @@
                             this.isUserAuth = false;
                             break;
                         case "AUTHORIZED":
-                            this.status = "Login Success."
-                            this.errors = ""
+                            if (!payload.is_admin) {
+                                this.status = "Login Success."
+                                this.errors = ""
 
-                            this.isUserAuth = true;
-                            this.teamName = payload['user']['teamName'];
+                                this.isUserAuth = true;
+                                this.teamName = payload['user']['teamName'];
+                            }else{
+                                this.errors = "User name or Pass key isn't valid"
+                                this.status = ""
+                                this.isUserAuth = false;
+                            }
                             break;
                         case "CARD_NO_RECEIVED":
                             this.status = "Distribution Done"
@@ -142,6 +148,10 @@
 
                             this.token = payload['number']
                             this.isWaitingForTokenDistribution = false;
+                            break;
+                        case "BACK_TO_WAITING_SCREEN":
+                            this.status = "moved back to waiting screen."
+                            this.isWaitingForTokenDistribution = true;
                             break;
                         default:
                             console.error("un-formatted data received");

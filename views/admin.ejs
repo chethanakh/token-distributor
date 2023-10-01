@@ -52,8 +52,11 @@
         <div class="m-auto w-100" x-show="isUserAuth">
             <div class="d-flex justify-content-between">
                 <h2>Welcome to the Administrative Area</h2>
-                <button class="btn btn-danger" x-on:click="logOut">Disconnect</button>
-                <button class="btn btn-success" x-on:click="SentTokenRequest">Token Distribute</button>
+                <div>
+                    <button class="btn btn-danger" x-on:click="logOut">Disconnect</button>
+                    <button class="btn btn-success" x-on:click="SentTokenRequest">Token Distribute</button>
+                    <button class="btn btn-primary" x-on:click="SentBackToWaitingScreen">Restart to waiting</button>
+                </div>
             </div>
             <div class="p-5"></div>
             <table class="table">
@@ -94,6 +97,7 @@
             errors: "",
             userName: "",
             password: "",
+            token_distributing: false,
             available_teams: {},
             ws: null,
             connectUntilConnect: function (connect_attempt) {
@@ -102,8 +106,15 @@
                 }
             },
             SentTokenRequest: function () {
+                this.token_distributing = true
                 this.status = "Sending request...."
                 var msg = { event: "GIVE_NUMBERS", payload: [] }
+                this.ws.send(JSON.stringify(msg));
+            },
+            SentBackToWaitingScreen: function () {
+                this.token_distributing = true
+                this.status = "Sending request...."
+                var msg = { event: "BACK_TO_WAITING_SCREEN_REQUEST", payload: [] }
                 this.ws.send(JSON.stringify(msg));
             },
             logOut: function () {
@@ -151,12 +162,17 @@
                                     this.available_teams[team]['token'] = payload.team_vs_token[team]
                                 }
                             });
+                            this.token_distributing = false
+
                             break;
                         case "TEAM_JOINED":
                             this.available_teams[payload.user_name]['is_active'] = true;
                             break;
                         case "TEAM_LEFT":
                             this.available_teams[payload.user_name]['is_active'] = false;
+                            break;
+                        case "BACK_TO_WAITING_SCREEN_REQUEST_SENT":
+                            this.status = "back to waiting screen request sent."
                             break;
                         default:
                             console.error("un-formatted data received");
@@ -169,7 +185,7 @@
                         this.errors = `Socket is closed. Reconnect will be attempted in 1 second.(attempt : ${this.connect_attempt})`
                         this.status = ""
                         console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
-                        
+
                         setTimeout(() => {
                             this.connect_attempt++;
                         }, 1000);
