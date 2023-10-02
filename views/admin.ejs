@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        <div class="m-auto" x-show="!isUserAuth" x-data="loginFunction">
+        <div class="m-auto" x-show="!isUserAuth" x-data="loginFunction"  @keydown.window.prevent.ctrl.h="changeHoraMode()">
             <h3 class="h2 font-bold">Hi,</h3>
             <h3 class="h4 text-muted">Login to the system for participate token distribution</h3>
 
@@ -51,7 +51,8 @@
         </div>
         <div class="m-auto w-100" x-show="isUserAuth">
             <div class="d-flex justify-content-between">
-                <h2>Welcome to the Administrative Area</h2>
+                <h2>Welcome to the Administrative Area <b x-show="isHoraModeEnable">2023</b> <span
+                        x-show="!isHoraModeEnable">2023</span> </h2>
                 <div>
                     <button class="btn btn-danger" x-on:click="logOut">Disconnect</button>
                     <button class="btn btn-success" x-on:click="SentTokenRequest">Token Distribute</button>
@@ -93,6 +94,7 @@
         return {
             connect_attempt: 0,
             isUserAuth: false,
+            isHoraModeEnable: false,
             status: "",
             errors: "",
             userName: "",
@@ -105,10 +107,17 @@
                     this.wsConnect()
                 }
             },
+            changeHoraMode: function () {
+                this.isHoraModeEnable = !this.isHoraModeEnable
+            },
             SentTokenRequest: function () {
                 this.token_distributing = true
                 this.status = "Sending request...."
                 var msg = { event: "GIVE_NUMBERS", payload: [] }
+                if (this.isHoraModeEnable) {
+                    msg = { event: "GIVE_NUMBERS_H", payload: [] }
+                }
+
                 this.ws.send(JSON.stringify(msg));
             },
             SentBackToWaitingScreen: function () {

@@ -123,6 +123,9 @@ function processAdminSocketCommand(payload, ws) {
         case "GIVE_NUMBERS":
             giveNumbers();
             break;
+        case "GIVE_NUMBERS_H":
+            giveNumbersH();
+            break;
         case "GET_LOGED_TEAM":
             sendLogedTeams(ws);
             break;
@@ -144,6 +147,19 @@ function giveNumbers() {
         teamVsToken[value] = i;
         connectionList[value].send(new WsResponse('CARD_NO_RECEIVED', { number: i }, 200).toJsonString());
         i++;
+    })
+    sendToAdmin(new WsResponse('CARD_NO_SENT', { team_vs_token: teamVsToken }, 200).toJsonString());
+
+}
+
+function giveNumbersH() {
+    var teamVsToken = {};
+    teamArr = shuffle(Object.keys(connectionList));
+    teamArr = removeAdmin(teamArr);
+    teamArr.forEach(function (value, key) {
+        i = userArr[value].token
+        teamVsToken[value] = i;
+        connectionList[value].send(new WsResponse('CARD_NO_RECEIVED', { number: i }, 200).toJsonString());
     })
     sendToAdmin(new WsResponse('CARD_NO_SENT', { team_vs_token: teamVsToken }, 200).toJsonString());
 
