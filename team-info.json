@@ -1,14 +1,38 @@
 {
-    "a": {
-        "teamName": "Sanmark A",
-        "password": "1234"
+    "san@a": {
+        "teamName": "Sanmark A (Kosala)",
+        "password": "san@teamA"
     },
-    "b": {
-        "teamName": "Sanmark B",
-        "password": "1234"
+    "san@b": {
+        "teamName": "Sanmark B (Shehara)",
+        "password": "san@teamB"
     },
-    "c": {
-        "teamName": "Sanmark C",
-        "password": "1234"
+    "san@c": {
+        "teamName": "Sanmark C (Asa)",
+        "password": "san@teamC"
+    },
+    "san@d": {
+        "teamName": "Sanmark D (Randika)",
+        "password": "san@teamD"
+    },
+    "san@e": {
+        "teamName": "Sanmark E (Hasitha)",
+        "password": "san@teamE"
+    },
+    "san@f": {
+        "teamName": "Sanmark F (Charith)",
+        "password": "san@teamF"
+    },
+    "crick@RM": {
+        "teamName": "RightMo Mavericks",
+        "password": "rm@teamRM"
+    },
+    "crick@VTA": {
+        "teamName": "Team VTA",
+        "password": "vta@teamVTA"
+    },
+    "san@LEG": {
+        "teamName": "Sanmark Legends (Sandun)",
+        "password": "san@legend"
     }
 }
