@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanmark Sport Day</title>
+    <link rel="stylesheet" href="./css/system.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+
+<body>
+    <div class="container h-100 d-flex align-items-center justify-content-center" x-data="initFunction"
+        x-init="$watch('connect_attempt',value => { connectUntilConnect(value) })">
+        <div class="row fixed-top w-50 mt-3 m-auto">
+            <div class="col-md-12">
+                <div class="alert alert-info" x-show="status!=''" x-text="status" role="alert" x-cloak>
+                </div>
+                <div class="alert alert-danger" x-show="errors!=''" x-text="errors" role="alert" x-cloak>
+                </div>
+            </div>
+        </div>
+
+        <div class="loader-container" x-show="connect_attempt > 0">
+            <div>
+                <span class="loader"></span>
+                <span class="loader-text">Connecting</span>
+            </div>
+        </div>
+
+        <div class="m-auto" x-show="!isUserAuth" x-data="loginFunction">
+            <h3 class="h2 font-bold">Hi,</h3>
+            <h3 class="h4 text-muted">Login to the system for participate token distribution</h3>
+
+            <div class="mt-3">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" x-model="loginForm.username" class="form-control" id="username"
+                        placeholder="Team Username">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Pass Key</label>
+                    <input type="password" class="form-control" id="password" x-model="loginForm.password"
+                        placeholder="Pass key">
+                </div>
+
+                <button type="button" x-on:click="loginFormSubmit" class="btn btn-success">Access to the System</button>
+            </div>
+        </div>
+        <div class="m-auto w-100" x-show="isUserAuth">
+            <div class="d-flex justify-content-between">
+                <h2>Welcome to the Administrative Area</h2>
+                <div>
+                    <button class="btn btn-danger" x-on:click="logOut">Disconnect</button>
+                    <button class="btn btn-success" x-on:click="SentTokenRequest">Token Distribute</button>
+                    <button class="btn btn-primary" x-on:click="SentBackToWaitingScreen">Restart to waiting</button>
+                </div>
+            </div>
+            <div class="p-5"></div>
+            <table class="table">
+                <thead>
+                    <th>Team name</th>
+                    <th>Is Active</th>
+                    <th>Token Number</th>
+                </thead>
+                <tbody>
+                    <template x-for="team in available_teams">
+                        <tr>
+                            <td x-text="team.teamName"></td>
+                            <td>
+                                <span x-show="team.is_active" class="badge text-bg-success">Active</span>
+                                <span x-show="!team.is_active" class="badge text-bg-danger">Not-yet</span>
+                            </td>
+                            <td x-text="team.token"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+<script>
+    const PORT = "<%= PORT %>"
+    const HOST = "<%= HOST %>"
+
+    function initFunction() {
+        return {
+            connect_attempt: 0,
+            isUserAuth: false,
+            status: "",
+            errors: "",
+            userName: "",
+            password: "",
+            token_distributing: false,
+            available_teams: {},
+            ws: null,
+            connectUntilConnect: function (connect_attempt) {
+                if (connect_attempt > 0) {
+                    this.wsConnect()
+                }
+            },
+            SentTokenRequest: function () {
+                this.token_distributing = true
+                this.status = "Sending request...."
+                var msg = { event: "GIVE_NUMBERS", payload: [] }
+                this.ws.send(JSON.stringify(msg));
+            },
+            SentBackToWaitingScreen: function () {
+                this.token_distributing = true
+                this.status = "Sending request...."
+                var msg = { event: "BACK_TO_WAITING_SCREEN_REQUEST", payload: [] }
+                this.ws.send(JSON.stringify(msg));
+            },
+            logOut: function () {
+                this.status = "Session End."
+                this.isUserAuth = false
+                this.ws.close();
+            },
+            wsConnect: function () {
+                this.ws = new WebSocket("ws://" + HOST + ":" + PORT + "/ws?user_name=" + this.userName + "&password=" + this.password)
+                this.status = "Connecting with distribution system..."
+                this.ws.onopen = () => {
+                    this.connect_attempt = 0;
+                    this.status = "Connected."
+                    this.errors = ""
+                    console.log("socket is connected.");
+                }
+
+                this.ws.onmessage = (event) => {
+                    var msg = JSON.parse(event.data)
+                    var payload = msg.payload
+                    switch (msg.event) {
+                        case "UN_AUTHORIZED":
+                            this.errors = "User name or Pass key isn't valid"
+                            this.status = ""
+                            this.isUserAuth = false;
+                            break;
+                        case "AUTHORIZED":
+                            if (payload.is_admin) {
+                                this.status = "Login Success."
+                                this.errors = ""
+                                this.isUserAuth = true;
+                                this.available_teams = payload['available_team'];
+                            } else {
+                                this.errors = "Please try with admin credentials.."
+                                this.status = ""
+                                this.isUserAuth = false;
+                                this.ws.close();
+                            }
+                            break;
+                        case "CARD_NO_SENT":
+                            this.status = "Card No Sent."
+
+                            Object.keys(payload.team_vs_token).forEach(team => {
+                                if (this.available_teams.hasOwnProperty(team)) {
+                                    this.available_teams[team]['token'] = payload.team_vs_token[team]
+                                }
+                            });
+                            this.token_distributing = false
+
+                            break;
+                        case "TEAM_JOINED":
+                            this.available_teams[payload.user_name]['is_active'] = true;
+                            break;
+                        case "TEAM_LEFT":
+                            this.available_teams[payload.user_name]['is_active'] = false;
+                            break;
+                        case "BACK_TO_WAITING_SCREEN_REQUEST_SENT":
+                            this.status = "back to waiting screen request sent."
+                            break;
+                        default:
+                            console.error("un-formatted data received");
+                            break;
+                    }
+                }
+
+                this.ws.onclose = (e) => {
+                    if (this.isUserAuth) {
+                        this.errors = `Socket is closed. Reconnect will be attempted in 1 second.(attempt : ${this.connect_attempt})`
+                        this.status = ""
+                        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+
+                        setTimeout(() => {
+                            this.connect_attempt++;
+                        }, 1000);
+                    }
+                }
+
+                this.ws.onerror = () => {
+                    ws.close();
+                }
+            }
+        }
+    }
+    function loginFunction() {
+        return {
+            loginForm: {
+                username: "",
+                password: ""
+            },
+            loginFormSubmit: function () {
+                this.userName = this.loginForm.username
+                this.password = this.loginForm.password
+                this.wsConnect(this.userName, this.password);
+            }
+        }
+
+    }
+
+
+
+</script>
+
+</html>
